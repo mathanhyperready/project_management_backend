@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  start_date  DateTime
+  end_date    DateTime
+  tasks       Task[]
+  created_at  DateTime @default(now())
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  project_id  Int
+  title       String
+  description String?
+  start_date  DateTime
+  end_date    DateTime
+  status      String   @default("todo")
+  created_at  DateTime @default(now())
+
+  project     Project  @relation(fields: [project_id], references: [id])
+}
