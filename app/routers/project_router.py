@@ -6,7 +6,6 @@ from datetime import datetime,date
 router = APIRouter()
 
 
-# helper to convert date to datetime
 def date_to_datetime(d: date | datetime | None) -> datetime | None:
     if d is None:
         return None

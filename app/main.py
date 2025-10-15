@@ -1,8 +1,23 @@
 from fastapi import FastAPI
-from app.routers import project_router, timesheet_router,user_router
+from app.routers import project_router, timesheet_router,user_router,auth
 from app.database import db
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Time Tracker API")
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  
+    allow_credentials=True, 
+    allow_methods=["*"],    
+    allow_headers=["*"],
+)
+
 
 @app.on_event("startup")
 async def startup():
@@ -13,6 +28,7 @@ async def shutdown():
     await db.disconnect()
 
 # Routers
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(user_router.app,prefix="/user", tags= ["User"])
 app.include_router(project_router.router, prefix="/projects", tags=["Projects"])
 app.include_router(timesheet_router.router, prefix="/timesheet", tags=["Timesheet"])
