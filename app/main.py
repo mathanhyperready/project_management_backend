@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import project_router, task_router
+from app.routers import project_router, timesheet_router,user_router
 from app.database import db
 
 app = FastAPI(title="Time Tracker API")
@@ -13,5 +13,6 @@ async def shutdown():
     await db.disconnect()
 
 # Routers
+app.include_router(user_router.app,prefix="/user", tags= ["User"])
 app.include_router(project_router.router, prefix="/projects", tags=["Projects"])
-app.include_router(task_router.router, prefix="/tasks", tags=["Tasks"])
+app.include_router(timesheet_router.router, prefix="/timesheet", tags=["Timesheet"])
