@@ -9,6 +9,7 @@ class TimesheetCreate(BaseModel):
     status: Optional[str] = "todo"
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    status : Optional[str] = None
 
 
 class TimesheetUpdate(BaseModel):
@@ -18,6 +19,7 @@ class TimesheetUpdate(BaseModel):
     projectId: Optional[int] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    status : Optional[str] = None
 
 
 class TimesheetResponse(TimesheetCreate):

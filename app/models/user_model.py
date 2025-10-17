@@ -6,6 +6,8 @@ from datetime import datetime
 class UserBase(BaseModel):
     user_name: str
     email: EmailStr
+    role_id: Optional[int] = None
+    is_active: bool = True
 
 
 class UserCreate(UserBase):
@@ -16,6 +18,8 @@ class UserUpdate(BaseModel):
     user_name: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6)
+    role_id: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
 class UserLogin(BaseModel):
@@ -35,6 +39,8 @@ class UserData(BaseModel):
     id: int
     user_name: str
     email: EmailStr
+    role_id: Optional[int] = None
+    is_active: bool
 
 
 class Token(BaseModel):

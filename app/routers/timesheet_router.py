@@ -30,14 +30,18 @@ async def create_timesheet(timesheet: TimesheetCreate):
         raise HTTPException(status_code=500, detail="Failed to create timesheet")
     
     
-@router.get("/{project_id}")
+@router.get("/project/{project_id}")
 async def get_timesheet_list(project_id: int):
     return await db.timesheet.find_many(where={"project": {"id": project_id}})
 
 
 @router.get("/{timesheet_id}")
-async def get_single_timesheet(timesheet_id : int):
-    return await db.timesheet.find_many(where={"timesheet": {"id": timesheet_id}})
+async def get_single_timesheet(timesheet_id: int):
+    timesheet = await db.timesheet.find_unique(where={"id": timesheet_id})
+    if not timesheet:
+        raise HTTPException(status_code=404, detail="Timesheet not found")
+    return timesheet
+
 
 # DELETE
 @router.delete("/{timesheet_id}")

@@ -7,43 +7,85 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum ProjectStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum TimesheetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
 model User {
   id          Int          @id @default(autoincrement())
   user_name   String       @unique
   password    String
   email       String
   created_at  DateTime     @default(now())
+  is_active   Boolean      @default(true)
+
+  role_id     Int?
+  role        Role?        @relation(fields: [role_id], references: [id])
 
   projects    Project[]
   timesheets  Timesheet[]
 }
 
 model Project {
-  id          Int          @id @default(autoincrement())
-  project_name        String?
-  description String?
-  start_date  DateTime?
-  end_date    DateTime?
-  created_at  DateTime     @default(now())
-  
-  user_id     Int?
-  user        User?        @relation(fields: [user_id], references: [id])
+  id           Int            @id @default(autoincrement())
+  project_name String?
+  description  String?
+  start_date   DateTime?
+  end_date     DateTime?
+  created_at   DateTime       @default(now())
+  status       ProjectStatus  @default(PLANNED)
 
-  // Relations
-  timesheets  Timesheet[]
+  client_id    Int?
+  user_id      Int?
+  user         User?          @relation(fields: [user_id], references: [id])
+  client       Client?        @relation(fields: [client_id], references: [id])
+
+  timesheets   Timesheet[]
 }
 
 model Timesheet {
-  id          Int      @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   description String?
-  status      String?
   start_date  DateTime?
   end_date    DateTime?
   duration    Float?
+  status      TimesheetStatus @default(PENDING)
+
   projectId   Int?
   userId      Int?
-
-  project     Project? @relation(fields: [projectId], references: [id])
-  user        User?    @relation(fields: [userId], references: [id])
+  project     Project?        @relation(fields: [projectId], references: [id])
+  user        User?           @relation(fields: [userId], references: [id])
 }
 
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  created_at  DateTime     @default(now())
+  is_enabled  Boolean   @default(true)
+  user        User[]
+}
+
+model Client {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  email       String
+  address     String
+  contact     String
+  notes       String
+  created_at  DateTime     @default(now())
+  is_enabled  Boolean   @default(true)
+
+  project     Project[]
+}

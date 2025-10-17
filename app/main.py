@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import project_router, timesheet_router,user_router,auth
+from app.routers import project_router, timesheet_router,user_router,auth,role_router, client_router
 from app.database import db
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,6 +29,8 @@ async def shutdown():
 
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(role_router.router, prefix="/role", tags=["Role"])
 app.include_router(user_router.app,prefix="/user", tags= ["User"])
+app.include_router(client_router.router, prefix="/clients", tags=["Client"])
 app.include_router(project_router.router, prefix="/projects", tags=["Projects"])
 app.include_router(timesheet_router.router, prefix="/timesheet", tags=["Timesheet"])
