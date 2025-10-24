@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.database import db
 from app.models.project_model import ProjectCreate, ProjectUpdate
 from datetime import datetime, date
+from prisma import Json
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ async def create_project(project: ProjectCreate):
                 "project_name": project.project_name,
                 "description": project.description,
                 "start_date": date_to_datetime(project.start_date),
-                "end_date": date_to_datetime(project.end_date),
+                "end_date": date_to_datetime(project.end_date)
             }
         )
         return created_project
@@ -57,6 +58,8 @@ async def get_single_project(project_id: int):
 async def update_project(project_id: int, project: ProjectUpdate):
     try:
         data = project.dict(exclude_unset=True)
+        if "teamMembers" in data and data["teamMembers"] is not None:
+            data["teamMembers"] = Json(data["teamMembers"])
         updated_project = await db.project.update(
             where={"id": project_id},
             data=data

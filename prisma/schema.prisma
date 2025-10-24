@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum ProjectStatus {
   PLANNED
   IN_PROGRESS
@@ -22,7 +21,6 @@ enum TimesheetStatus {
   REJECTED
 }
 
-
 model User {
   id          Int          @id @default(autoincrement())
   user_name   String       @unique
@@ -34,8 +32,13 @@ model User {
   role_id     Int?
   role        Role?        @relation(fields: [role_id], references: [id])
 
-  projects    Project[]
-  timesheets  Timesheet[]
+  projects    Project[]    @relation("ProjectCreatedBy")
+  timesheets  Timesheet[]  @relation("TimesheetCreatedBy")
+  roles       Role[]       @relation("RoleCreatedBy")
+  clients     Client[]     @relation("ClientCreatedBy")
+  created_projects Project[] @relation("ProjectUser")
+
+  Timesheet Timesheet[]
 }
 
 model Project {
@@ -49,10 +52,13 @@ model Project {
 
   client_id    Int?
   user_id      Int?
-  user         User?          @relation(fields: [user_id], references: [id])
+  created_by   Int?
+  user         User?          @relation("ProjectUser", fields: [user_id], references: [id])
   client       Client?        @relation(fields: [client_id], references: [id])
+  creator      User?          @relation("ProjectCreatedBy", fields: [created_by], references: [id])
 
   timesheets   Timesheet[]
+  teamMembers   Json?          @default("[]")
 }
 
 model Timesheet {
@@ -65,16 +71,21 @@ model Timesheet {
 
   projectId   Int?
   userId      Int?
+  created_by  Int?
   project     Project?        @relation(fields: [projectId], references: [id])
   user        User?           @relation(fields: [userId], references: [id])
+  creator     User?           @relation("TimesheetCreatedBy", fields: [created_by], references: [id])
 }
 
 model Role {
   id          Int          @id @default(autoincrement())
   name        String       @unique
   created_at  DateTime     @default(now())
-  is_enabled  Boolean   @default(true)
+  is_enabled  Boolean      @default(true)
+
   user        User[]
+  created_by  Int?
+  creator     User?        @relation("RoleCreatedBy", fields: [created_by], references: [id])
 }
 
 model Client {
@@ -85,7 +96,9 @@ model Client {
   contact     String
   notes       String
   created_at  DateTime     @default(now())
-  is_enabled  Boolean   @default(true)
+  is_enabled  Boolean      @default(true)
 
   project     Project[]
+  created_by  Int?
+  creator     User?        @relation("ClientCreatedBy", fields: [created_by], references: [id])
 }
