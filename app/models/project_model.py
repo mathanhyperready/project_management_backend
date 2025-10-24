@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime,date
-from typing import Optional, List
+from typing import Optional, List ,Dict, Any
 
 class ProjectCreate(BaseModel):
     project_name: str
@@ -18,6 +18,7 @@ class ProjectUpdate(BaseModel):
     user_id: Optional[int] = None
     client_id : Optional[int] = None
     status : Optional[str] = None
+    teamMembers : Optional[List[Dict[str, Any]]] = None
 
 
 class ProjectResponse(ProjectCreate):
