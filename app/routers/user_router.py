@@ -40,7 +40,11 @@ async def get_users():
         users = await db.user.find_many(include={
             "projects": True,
             "timesheets": True,
-            "role": True
+            "role": {
+                    "include": {
+                        "permissions": True
+                    }
+                }
         })
         return users
     except Exception as e:
