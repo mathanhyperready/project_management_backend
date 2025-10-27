@@ -7,6 +7,90 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id               Int         @id @default(autoincrement())
+  password         String
+  email            String
+  created_at       DateTime    @default(now())
+  user_name        String      @unique
+  role_id          Int?
+  is_active        Boolean     @default(true)
+  clients          Client[]    @relation("ClientCreatedBy")
+  projects         Project[]   @relation("ProjectCreatedBy")
+  created_projects Project[]   @relation("ProjectUser")
+  roles            Role[]      @relation("RoleCreatedBy")
+  timesheets       Timesheet[] @relation("TimesheetCreatedBy")
+  Timesheet        Timesheet[]
+  role             Role?       @relation(fields: [role_id], references: [id])
+}
+
+model Project {
+  id           Int           @id @default(autoincrement())
+  description  String?
+  start_date   DateTime?
+  end_date     DateTime?
+  created_at   DateTime      @default(now())
+  user_id      Int?
+  project_name String?
+  client_id    Int?
+  status       ProjectStatus @default(PLANNED)
+  created_by   Int?
+  teamMembers  Json?         @default("[]")
+  client       Client?       @relation(fields: [client_id], references: [id])
+  creator      User?         @relation("ProjectCreatedBy", fields: [created_by], references: [id])
+  user         User?         @relation("ProjectUser", fields: [user_id], references: [id])
+  timesheets   Timesheet[]
+}
+
+model Timesheet {
+  id          Int             @id @default(autoincrement())
+  start_date  DateTime?
+  end_date    DateTime?
+  duration    Float?
+  projectId   Int?
+  description String?
+  userId      Int?
+  status      TimesheetStatus @default(PENDING)
+  created_by  Int?
+  creator     User?           @relation("TimesheetCreatedBy", fields: [created_by], references: [id])
+  project     Project?        @relation(fields: [projectId], references: [id])
+  user        User?           @relation(fields: [userId], references: [id])
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  created_at  DateTime     @default(now())
+  is_enabled  Boolean      @default(true)
+  created_by  Int?
+  creator     User?        @relation("RoleCreatedBy", fields: [created_by], references: [id])
+  user        User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  roles       Role[]   @relation("RolePermissions")
+}
+
+model Client {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  created_at DateTime  @default(now())
+  address    String
+  contact    String
+  email      String
+  notes      String
+  is_enabled Boolean   @default(true)
+  created_by Int?
+  creator    User?     @relation("ClientCreatedBy", fields: [created_by], references: [id])
+  project    Project[]
+}
+
 enum ProjectStatus {
   PLANNED
   IN_PROGRESS
@@ -19,86 +103,4 @@ enum TimesheetStatus {
   PENDING
   APPROVED
   REJECTED
-}
-
-model User {
-  id          Int          @id @default(autoincrement())
-  user_name   String       @unique
-  password    String
-  email       String
-  created_at  DateTime     @default(now())
-  is_active   Boolean      @default(true)
-
-  role_id     Int?
-  role        Role?        @relation(fields: [role_id], references: [id])
-
-  projects    Project[]    @relation("ProjectCreatedBy")
-  timesheets  Timesheet[]  @relation("TimesheetCreatedBy")
-  roles       Role[]       @relation("RoleCreatedBy")
-  clients     Client[]     @relation("ClientCreatedBy")
-  created_projects Project[] @relation("ProjectUser")
-
-  Timesheet Timesheet[]
-}
-
-model Project {
-  id           Int            @id @default(autoincrement())
-  project_name String?
-  description  String?
-  start_date   DateTime?
-  end_date     DateTime?
-  created_at   DateTime       @default(now())
-  status       ProjectStatus  @default(PLANNED)
-
-  client_id    Int?
-  user_id      Int?
-  created_by   Int?
-  user         User?          @relation("ProjectUser", fields: [user_id], references: [id])
-  client       Client?        @relation(fields: [client_id], references: [id])
-  creator      User?          @relation("ProjectCreatedBy", fields: [created_by], references: [id])
-
-  timesheets   Timesheet[]
-  teamMembers   Json?          @default("[]")
-}
-
-model Timesheet {
-  id          Int             @id @default(autoincrement())
-  description String?
-  start_date  DateTime?
-  end_date    DateTime?
-  duration    Float?
-  status      TimesheetStatus @default(PENDING)
-
-  projectId   Int?
-  userId      Int?
-  created_by  Int?
-  project     Project?        @relation(fields: [projectId], references: [id])
-  user        User?           @relation(fields: [userId], references: [id])
-  creator     User?           @relation("TimesheetCreatedBy", fields: [created_by], references: [id])
-}
-
-model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  created_at  DateTime     @default(now())
-  is_enabled  Boolean      @default(true)
-
-  user        User[]
-  created_by  Int?
-  creator     User?        @relation("RoleCreatedBy", fields: [created_by], references: [id])
-}
-
-model Client {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  email       String
-  address     String
-  contact     String
-  notes       String
-  created_at  DateTime     @default(now())
-  is_enabled  Boolean      @default(true)
-
-  project     Project[]
-  created_by  Int?
-  creator     User?        @relation("ClientCreatedBy", fields: [created_by], references: [id])
 }

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.database import db
 from app.models.project_model import ProjectCreate, ProjectUpdate
 from datetime import datetime, date
 from prisma import Json
+from app.services.utils.permissions import require_permission
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ def date_to_datetime(d: date | datetime | None) -> datetime | None:
     return datetime(d.year, d.month, d.day)
 
 @router.post("/")
+@router.post("/", dependencies=[Depends(require_permission("project_create"))])
 async def create_project(project: ProjectCreate):
     try:
         created_project = await db.project.create(

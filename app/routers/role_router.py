@@ -15,22 +15,41 @@ async def create_role(data: RoleCreate):
                 detail="Role name already exists"
             )
 
-        role = await db.role.create(data=data.dict())
+        # Base create data
+        create_data = {
+            "name": data.name,
+            "is_enabled": data.is_enabled,
+            "created_by": data.created_by,
+        }
+
+        # Attach permissions (if provided)
+        if data.permissions:
+            create_data["permissions"] = {
+                "connect": [{"code": code} for code in data.permissions]
+            }
+
+        role = await db.role.create(
+            data=create_data,
+            include={"permissions": True}
+        )
+
         return role
+
     except HTTPException:
         raise
     except Exception as e:
         print("Create Role Error:", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create role"
+            detail=f"Failed to create role: {e}"
         )
+
 
 
 @router.get("/", response_model=List[RoleResponse])
 async def get_all_roles():
     try:
-        roles = await db.role.find_many(order={"id": "asc"})
+        roles = await db.role.find_many(include={"permissions": True},order={"id": "asc"})
         return roles
     except Exception as e:
         print("Get All Roles Error:", e)
@@ -43,7 +62,7 @@ async def get_all_roles():
 @router.get("/{role_id}", response_model=RoleResponse)
 async def get_role(role_id: int):
     try:
-        role = await db.role.find_unique(where={"id": role_id})
+        role = await db.role.find_unique(where={"id": role_id},include={"permissions": True})
         if not role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

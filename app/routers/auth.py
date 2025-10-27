@@ -37,7 +37,7 @@ async def signup(user: UserCreate):
 @router.post("/signin", response_model=Token)
 async def signin(user: UserLogin):
     try:
-        db_user = await db.user.find_first(where={"email": user.email})
+        db_user = await db.user.find_first(where={"email": user.email},include={"role": { "include": { "permissions": True } }})
         if not db_user or not verify_password(user.password, db_user.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

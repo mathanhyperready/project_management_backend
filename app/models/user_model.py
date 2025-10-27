@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 from datetime import datetime
+from .role_model import RoleResponse  # ✅ Import RoleResponse
 
 
 class UserBase(BaseModel):
@@ -32,7 +33,7 @@ class UserResponse(UserBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # ✅ modern replacement for orm_mode
 
 
 class UserData(BaseModel):
@@ -41,6 +42,10 @@ class UserData(BaseModel):
     email: EmailStr
     role_id: Optional[int] = None
     is_active: bool
+    role: Optional[RoleResponse] = None  # ✅ strongly typed nested role
+
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):
