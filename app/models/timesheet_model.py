@@ -10,6 +10,7 @@ class TimesheetCreate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     status : Optional[str] = None
+    created_by: Optional[int] = None
 
 
 class TimesheetUpdate(BaseModel):
@@ -20,11 +21,18 @@ class TimesheetUpdate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     status : Optional[str] = None
+    created_by: Optional[int] = None
+
+class UserCreator(BaseModel):
+    id: int
+    user_name: str
+    email: Optional[str] = None
 
 
 class TimesheetResponse(TimesheetCreate):
     id: int
     created_at: datetime
+    creator: Optional[UserCreator] = None
 
     class Config:
         from_attributes = True

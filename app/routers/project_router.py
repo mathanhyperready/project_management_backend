@@ -15,7 +15,7 @@ def date_to_datetime(d: date | datetime | None) -> datetime | None:
     return datetime(d.year, d.month, d.day)
 
 @router.post("/")
-@router.post("/", dependencies=[Depends(require_permission("project_create"))])
+# @router.post("/", dependencies=[Depends(require_permission("project_create"))])
 async def create_project(project: ProjectCreate):
     try:
         created_project = await db.project.create(
@@ -23,18 +23,22 @@ async def create_project(project: ProjectCreate):
                 "project_name": project.project_name,
                 "description": project.description,
                 "start_date": date_to_datetime(project.start_date),
-                "end_date": date_to_datetime(project.end_date)
+                "end_date": date_to_datetime(project.end_date),
+                "created_by": project.created_by, 
             }
         )
+        print("create_project********",created_project)
         return created_project
+    
     except Exception as e:
         print("Create Project Error:", e)
         raise HTTPException(status_code=500, detail="Failed to create project")
 
+
 @router.get("/")
 async def list_projects():
     try:
-        projects = await db.project.find_many(include={"timesheets": True, "user": True, "client" : True})
+        projects = await db.project.find_many(include={"timesheets": True, "user": True, "client" : True,"creator": True})
         return projects
     except Exception as e:
         print("List Projects Error:", e)
@@ -45,7 +49,7 @@ async def get_single_project(project_id: int):
     try:
         project = await db.project.find_first(
             where={"id": project_id},
-            include={"timesheets": True}
+            include={"timesheets": True,"creator": True}
         )
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
