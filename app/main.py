@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import project_router, timesheet_router,user_router,auth,role_router, client_router, seed_routes
+from app.routers import project_router, timesheet_router,user_router,auth,role_router, client_router, seed_routes, permissionRoutes
 from app.database import db
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -35,3 +35,4 @@ app.include_router(client_router.router, prefix="/clients", tags=["Client"])
 app.include_router(project_router.router, prefix="/projects", tags=["Projects"])
 app.include_router(timesheet_router.router, prefix="/timesheet", tags=["Timesheet"])
 app.include_router(seed_routes.router, prefix='/seed', tags=["seed"])
+app.include_router(permissionRoutes.router)

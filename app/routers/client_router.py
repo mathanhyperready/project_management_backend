@@ -2,20 +2,26 @@ from fastapi import APIRouter, HTTPException,status
 from app.database import db
 from app.models.client_model import ClientResponse,ClientCreate,ClientUpdate
 from datetime import datetime, date
+from typing import List
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("/", response_model=List[ClientResponse])
 async def get_all_clients():
     try:
-        clients = await db.client.find_many(order={"id": "asc"})
+        clients = await db.client.find_many(
+            include={"creator": True},   # ✅ fetch creator details
+            order={"id": "asc"}
+        )
         return clients
     except HTTPException:
         raise
-        
     except Exception as e:
-        print("Get All Clients Error", e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Failed to Get Clients")
+        print("Get All Clients Error:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to Get Clients"
+        )
     
 
 @router.get("/{client_id}")
@@ -32,17 +38,31 @@ async def get_single_client(client_id : int):
     
     
 
-@router.post("/")
+
+@router.post("/", response_model=ClientResponse)
 async def create_client(data: ClientCreate):
     try:
+        # Check duplicate
         existing_client = await db.client.find_first(where={"name": data.name})
         if existing_client:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Client name '{data.name}' already exists"
             )
-    
-        client = await db.client.create(data=data.dict())
+
+        # ✅ Accept created_by manually (if passed from frontend)
+        client_data = data.dict()
+        if "created_by" not in client_data or not client_data["created_by"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing created_by user ID"
+            )
+
+        # ✅ Create client and include creator relation in response
+        client = await db.client.create(
+            data=client_data,
+            include={"creator": True}
+        )
         return client
 
     except HTTPException:
@@ -53,6 +73,8 @@ async def create_client(data: ClientCreate):
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Client creation failed due to server error"
         )
+
+
         
 @router.put("/{client_id}", response_model=ClientResponse)
 async def update_client(client_id: int, client: ClientUpdate):

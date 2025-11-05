@@ -14,15 +14,13 @@ async def create_role(data: RoleCreate):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Role name already exists"
             )
-
-        # Base create data
+            
         create_data = {
             "name": data.name,
             "is_enabled": data.is_enabled,
             "created_by": data.created_by,
         }
 
-        # Attach permissions (if provided)
         if data.permissions:
             create_data["permissions"] = {
                 "connect": [{"code": code} for code in data.permissions]
@@ -49,7 +47,13 @@ async def create_role(data: RoleCreate):
 @router.get("/", response_model=List[RoleResponse])
 async def get_all_roles():
     try:
-        roles = await db.role.find_many(include={"permissions": True},order={"id": "asc"})
+        roles = await db.role.find_many(
+            include={
+                "permissions": True,
+                "creator": True
+            },
+            order={"id": "asc"}
+        )
         return roles
     except Exception as e:
         print("Get All Roles Error:", e)
@@ -57,6 +61,7 @@ async def get_all_roles():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch roles"
         )
+
 
 
 @router.get("/{role_id}", response_model=RoleResponse)
@@ -82,18 +87,40 @@ async def get_role(role_id: int):
 @router.put("/{role_id}", response_model=RoleResponse)
 async def update_role(role_id: int, data: RoleUpdate):
     try:
-        existing = await db.role.find_unique(where={"id": role_id})
-        if not existing:
+        # Check if role exists
+        existing_role = await db.role.find_unique(
+            where={"id": role_id},
+            include={"permissions": True}
+        )
+        if not existing_role:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Role not found"
             )
 
-        updated = await db.role.update(
+        update_data = data.model_dump(exclude_unset=True)
+
+        if data.permissions:
+            # Ensure each permission exists, otherwise create it
+            for code in data.permissions:
+                existing_perm = await db.permission.find_unique(where={"code": code})
+                if not existing_perm:
+                    await db.permission.create(data={"code": code, "name": code.replace("_", " ").title()})
+
+            # Use 'connect' instead of 'set' to attach new permissions without removing existing ones
+            update_data["permissions"] = {
+                "connect": [{"code": code} for code in data.permissions]
+            }
+
+        # Update role
+        updated_role = await db.role.update(
             where={"id": role_id},
-            data=data.model_dump(exclude_unset=True)
+            data=update_data,
+            include={"permissions": True}
         )
-        return updated
+
+        return updated_role
+
     except HTTPException:
         raise
     except Exception as e:
@@ -102,6 +129,7 @@ async def update_role(role_id: int, data: RoleUpdate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update role"
         )
+
 
 
 @router.delete("/{role_id}")

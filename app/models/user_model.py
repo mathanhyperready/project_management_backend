@@ -33,7 +33,7 @@ class UserResponse(UserBase):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # ✅ modern replacement for orm_mode
+        from_attributes = True
 
 
 class UserData(BaseModel):
@@ -42,7 +42,7 @@ class UserData(BaseModel):
     email: EmailStr
     role_id: Optional[int] = None
     is_active: bool
-    role: Optional[RoleResponse] = None  # ✅ strongly typed nested role
+    role: Optional[RoleResponse] = None
 
     class Config:
         from_attributes = True

@@ -28,10 +28,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 def require_permission(permission_code: str):
     async def wrapper(user = Depends(get_current_user)):
         role = user.role
+        print("role****",role)
         if not role:
             raise HTTPException(status_code=403, detail="User has no role assigned")
 
         has_perm = any(p.code == permission_code for p in role.permissions)
+        print("Has Permissiomn")
         if not has_perm:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

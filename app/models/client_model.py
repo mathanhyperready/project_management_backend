@@ -8,8 +8,17 @@ class ClientCreate(BaseModel):
     address: Optional[str] = None
     contact: Optional[str] = None
     notes: Optional[str] = None
-    is_enabled : bool = True
-    
+    is_enabled: bool = True
+    created_by: Optional[int] = None
+
+
+class UserCreator(BaseModel):
+    id: int
+    user_name: str
+    email: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 class ClientUpdate(BaseModel):
@@ -18,7 +27,7 @@ class ClientUpdate(BaseModel):
     address: Optional[str] = None
     contact: Optional[str] = None
     notes: Optional[str] = None
-    is_enabled : bool = True
+    is_enabled: Optional[bool] = True
 
 
 class ClientResponse(BaseModel):
@@ -29,6 +38,8 @@ class ClientResponse(BaseModel):
     contact: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime
+    is_enabled: bool
+    creator: Optional[UserCreator] = None 
 
     class Config:
-        orm_mode = True
+        from_attributes = True

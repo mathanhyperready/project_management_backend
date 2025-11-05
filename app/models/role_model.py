@@ -13,6 +13,16 @@ class PermissionBase(BaseModel):
         from_attributes = True
 
 
+# 👇 Add this new schema for creator details
+class UserCreator(BaseModel):
+    id: int
+    user_name: str
+    email: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class RoleBase(BaseModel):
     name: str
     is_enabled: bool = True
@@ -32,7 +42,8 @@ class RoleUpdate(BaseModel):
 class RoleResponse(RoleBase):
     id: int
     created_at: datetime
-    permissions: Optional[List[PermissionBase]] = []  # 👈 use PermissionBase here
+    permissions: Optional[List[PermissionBase]] = []
+    creator: Optional[UserCreator] = None   # 👈 include the creator relationship
 
     class Config:
         from_attributes = True
